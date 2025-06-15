@@ -13,8 +13,6 @@ app = FastAPI(
     "Incluye operaciones CRUD, documentación automática, logging y despliegue con Docker."
 )
 
-
-
 @app.get("/")
 def inicio():
     return{"mensaje":"API para portfolio de inversión"}
@@ -32,4 +30,15 @@ def obtener_inversion(id:int):
             return inversion
     raise HTTPException(status_code=404, detail="Inversión no encontrada")
         
+
+# Endpoint para crear nuevas inversiones a mi lista
+@app.post("/inversiones", response_model=Inversion, status_code=201)
+def crear_inversion(nueva: Inversion):
+    # Si ya existe una inversión con ese ID
+    if any(i.id == nueva.id for i in inversiones):
+        raise HTTPException(status_code=400, detail="ID duplicado")
+
+    # Si no, la añadimos
+    inversiones.append(nueva)
+    return nueva
 

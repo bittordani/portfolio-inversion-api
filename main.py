@@ -42,6 +42,7 @@ def crear_inversion(nueva: Inversion):
     inversiones.append(nueva)
     return nueva
 
+
 # Endpoint para modificar un registro ya insertado con validación por ID
 @app.put("/inversiones/{id}", response_model=Inversion)
 def actualizar_inversion(id: int, datos_actualizados: Inversion):
@@ -50,4 +51,5 @@ def actualizar_inversion(id: int, datos_actualizados: Inversion):
             inversiones[indice] = datos_actualizados
             return datos_actualizados
     raise HTTPException(status_code=404, detail="Inversión no encontrada")
+
 

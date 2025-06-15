@@ -53,3 +53,11 @@ def actualizar_inversion(id: int, datos_actualizados: Inversion):
     raise HTTPException(status_code=404, detail="Inversión no encontrada")
 
 
+# Endpoint para borrar un registro con validación por si no lo encuentra
+@app.delete("/inversiones/{id}", status_code=204)
+def eliminar_inversion(id: int):
+    for i, inversion in enumerate(inversiones):
+        if inversion.id == id:
+            del inversiones[i]
+            return
+    raise HTTPException(status_code=404, detail="Inversion no encontrada")

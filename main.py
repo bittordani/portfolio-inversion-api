@@ -1,63 +1,76 @@
-from fastapi import FastAPI, HTTPException
-from app.modelos import Inversion
-from app.datos import inversiones
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
 from typing import List
-from fastapi import HTTPException
 
+from app.database import SessionLocal
+from app.database import engine, Base
+from app.modelos import Inversion
+from app.schemas import InversionOut, InversionCreate  # crea InversionCreate si no existe
 
-# Inicio de la app y comprobación de que la API funciona correctamente y mensaje de bienvenida
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="Portfolio de inversión con API",
     version="1.0",
     description="API en FastAPI para gestionar un portfolio de inversión en bolsa. " \
-    "Incluye operaciones CRUD, documentación automática, logging y despliegue con Docker."
+                "Incluye operaciones CRUD, validaciones, logging y despliegue con Docker."
 )
+
+# Dependencia para inyectar la sesión de DB
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 @app.get("/")
 def inicio():
-    return{"mensaje":"API para portfolio de inversión"}
+    return {"mensaje": "API para portfolio de inversión"}
 
-# Endpoint para listar los movimientos
-@app.get("/inversiones", response_model=List[Inversion])
-def listar_inversiones():
-    return inversiones
 
-# Endpoint para listar los movimientos
-@app.get("/inversiones/{id}", response_model=Inversion)
-def obtener_inversion(id:int):
-    for inversion in inversiones:
-        if inversion.id == id:
-            return inversion
-    raise HTTPException(status_code=404, detail="Inversión no encontrada")
-        
+@app.get("/inversiones", response_model=List[InversionOut])
+def listar_inversiones(db: Session = Depends(get_db)):
+    return db.query(Inversion).all()
 
-# Endpoint para crear nuevas inversiones a mi lista
-@app.post("/inversiones", response_model=Inversion, status_code=201)
-def crear_inversion(nueva: Inversion):
-    # Si ya existe una inversión con ese ID
-    if any(i.id == nueva.id for i in inversiones):
+
+@app.get("/inversiones/{id}", response_model=InversionOut)
+def obtener_inversion(id: int, db: Session = Depends(get_db)):
+    inversion = db.query(Inversion).filter(Inversion.id == id).first()
+    if inversion is None:
+        raise HTTPException(status_code=404, detail="Inversión no encontrada")
+    return inversion
+
+
+@app.post("/inversiones", response_model=InversionOut, status_code=201)
+def crear_inversion(nueva: InversionCreate, db: Session = Depends(get_db)):
+    if db.query(Inversion).filter(Inversion.id == nueva.id).first():
         raise HTTPException(status_code=400, detail="ID duplicado")
-
-    # Si no, la añadimos
-    inversiones.append(nueva)
-    return nueva
-
-
-# Endpoint para modificar un registro ya insertado con validación por ID
-@app.put("/inversiones/{id}", response_model=Inversion)
-def actualizar_inversion(id: int, datos_actualizados: Inversion):
-    for indice, inversion in enumerate(inversiones):
-        if inversion.id == id:
-            inversiones[indice] = datos_actualizados
-            return datos_actualizados
-    raise HTTPException(status_code=404, detail="Inversión no encontrada")
+    inversion = Inversion(**nueva.dict())
+    db.add(inversion)
+    db.commit()
+    db.refresh(inversion)
+    return inversion
 
 
-# Endpoint para borrar un registro con validación por si no lo encuentra
+@app.put("/inversiones/{id}", response_model=InversionOut)
+def actualizar_inversion(id: int, datos_actualizados: InversionCreate, db: Session = Depends(get_db)):
+    inversion = db.query(Inversion).filter(Inversion.id == id).first()
+    if not inversion:
+        raise HTTPException(status_code=404, detail="Inversión no encontrada")
+    for key, value in datos_actualizados.dict().items():
+        setattr(inversion, key, value)
+    db.commit()
+    db.refresh(inversion)
+    return inversion
+
+
 @app.delete("/inversiones/{id}", status_code=204)
-def eliminar_inversion(id: int):
-    for i, inversion in enumerate(inversiones):
-        if inversion.id == id:
-            del inversiones[i]
-            return
-    raise HTTPException(status_code=404, detail="Inversion no encontrada")
+def eliminar_inversion(id: int, db: Session = Depends(get_db)):
+    inversion = db.query(Inversion).filter(Inversion.id == id).first()
+    if not inversion:
+        raise HTTPException(status_code=404, detail="Inversión no encontrada")
+    db.delete(inversion)
+    db.commit()
+    return

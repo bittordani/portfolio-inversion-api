@@ -1,21 +1,17 @@
-# app/database.py
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Datos de conexión a tu base de datos MariaDB/MySQL
-DB_USER = "fastapi_user"
-DB_PASSWORD = "fastapi123"
-DB_HOST = "localhost"
-DB_PORT = "3306"
-DB_NAME = "inversiones_db"
+DB_USER     = os.getenv("DB_USER",     "fastapi_user")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "fastapi_pass")
+DB_HOST     = os.getenv("DB_HOST",     "db")          #  <- NOMBRE DEL SERVICIO
+DB_PORT     = os.getenv("DB_PORT",     "3306")
+DB_NAME     = os.getenv("DB_NAME",     "inversiones_db")
 
-# URL de conexión
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+SQLALCHEMY_DATABASE_URL = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
-# Crear el motor y el SessionLocal
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base para modelos ORM
-Base = declarative_base()
+engine        = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+SessionLocal  = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base          = declarative_base()

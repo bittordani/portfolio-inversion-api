@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: inversiones_db
+      MYSQL_USER: fastapi_user
+      MYSQL_PASSWORD: fastapi_pass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  fastapi:
+    build: .
+    container_name: fastapi-api
+    depends_on:
+      - db          # el script se encargará de esperar
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: fastapi_user
+      DB_PASSWORD: fastapi_pass
+      DB_NAME: inversiones_db
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+volumes:
+  mariadb_data:
+
+networks:
+  app-network:

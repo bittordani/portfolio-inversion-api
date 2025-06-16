@@ -13,8 +13,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# 🧱 Crear las tablas en la base de datos
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Portfolio de inversión con API",
@@ -22,6 +20,14 @@ app = FastAPI(
     description="API en FastAPI para gestionar un portfolio de inversión en bolsa. "
                 "Incluye operaciones CRUD, validaciones, logging y despliegue con Docker."
 )
+
+# 🧱 Crear las tablas en la base de datos
+@app.on_event("startup")
+def startup():
+    logging.info("⏳ Creando las tablas si no existen...")
+    Base.metadata.create_all(bind=engine)
+    logging.info("✅ Tablas listas")
+    
 
 # 📦 Dependencia para inyectar sesión de DB
 def get_db():

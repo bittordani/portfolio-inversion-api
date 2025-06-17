@@ -93,7 +93,7 @@ docker exec -it mariadb mariadb -u fastapi_user -p
 
 * **Víctor Daniel Martínez**
 * Linkedin: www.linkedin.com/in/victor-daniel-martinez-martinez
-* Proyecto realizado para el módulo de despliegue del Máster en IA, Cloud y DevOps
+* Proyecto realizado para el módulo de Contenedores y Virtualización del Máster en IA, Cloud Computing & DevOps de PontIa.tech
 
 ---
 

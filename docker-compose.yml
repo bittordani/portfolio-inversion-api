@@ -27,7 +27,7 @@ services:
       DB_PASSWORD: fastapi_pass
       DB_NAME: inversiones_db
     ports:
-      - "8000:8000"
+      - "8080:8080"
     networks:
       - app-network
 

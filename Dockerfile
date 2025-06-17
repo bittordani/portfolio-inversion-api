@@ -18,6 +18,6 @@ COPY wait-for-db.sh /wait-for-db.sh
 RUN chmod +x /wait-for-db.sh
 
 # 5. Puertos y comando de arranque
-EXPOSE 8000
+EXPOSE 8080
 CMD ["/wait-for-db.sh"]
 # ------------------------------------
